@@ -1,5 +1,6 @@
 var RSA = require('hybrid-crypto-js').RSA;
 var Crypt = require('hybrid-crypto-js').Crypt;
+var readline = require('readline');
 
 var entropy = 'Random string, integer or float';
 var rsa = new RSA({ entropy: entropy });
@@ -20,24 +21,48 @@ var crypt = new Crypt({
     aesKeySize: 192, // Defaults to 256,
 });
 
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+// Create a function to read user input
+function getUserInput(prompt) {
+    return new Promise((resolve) => {
+            rl.question(prompt, (answer) => {
+            resolve(answer);
+        });
+    });
+}
+
 rsa.generateKeyPair(function(keyPair) {
     // Callback function receives new key pair as a first argument
     var publicKey = keyPair.publicKey;
     var privateKey = keyPair.privateKey;
 
-    var message = 'send a message to (someone), especially by email, text, app, or other electronic means.I was messaged by a Californian contact for some information';
+    main(publicKey,privateKey)
+});
+
+
+// Usage example: reading two user inputs
+async function main(publicKey,privateKey) {
+    var message = await getUserInput('Enter the message : ');
+
     // Encryption with one public RSA key
     var encrypted = crypt.encrypt(publicKey, message);
     var result = JSON.parse(encrypted);
 
-    console.log("encrypted message cipher : ",result.cipher);
-    console.log("encrypted message key : ",result.keys);
+    console.log("\n******Encrypted data******\n");
+    console.log("Encrypted cipher : ",result.cipher);
+    console.log("encrypted key : ",result.keys);
 
     var decrypted = crypt.decrypt(privateKey, encrypted);
 
     // Get decrypted message
+    console.log("\n******Decrypted data******\n")
     var result = decrypted.message;
-    console.log("decrpyed message",result)
-});
+    console.log("Decrpyed message : ",result)
+    rl.close();
+}
 
 
